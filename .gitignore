@@ -60,14 +60,8 @@ docs/_build/
 target/
 /staticfiles/
 media/
-.idea/*
 *.xml
 *.DS_Store
-Qbot/production_settings.py
-Qbot/development_settings.py
-
-Qbot/staticfiles
 *.sql
-sharzh script
-
-db.sqlite3
+messages.db
+.idea/
