@@ -1,20 +1,24 @@
 # **Telegram Crawler** 
 
 
-Using this crawler, you can crawl telegram channels, groups or your private chats. Chats will be saved in SQLiteDB and text file with newline delimiter.
+Using this crawler, you can crawl telegram channels, groups or your private chats. Chats will be saved in SQLite database and text file with.
 You can query with different parameters like channel names, group names, telegram usernames, telegram unique ids and etc.
 
 Works with Python 3.3+.
 
 ## **Dependencies** ##
-Install dependencies:
+Install dependencies using this command:
 ```
 pip install -r requirements
+```
+and if you don't have sqlite3, install it:
+```
+sudo apt-get install sqlite3
 ```
 
 ## **Usage** ##
 
-For running crawler, first you need to combile [My edited version of tg CLI](https://github.com/vysheng/tg) with the following command:
+For running this cute crawler, first you need to compile [my edited version of tg CLI](https://github.com/vysheng/tg) with the following command:
 ```
 ./bin/telegram-cli -k server_pub -p 4458 --json
 ```
