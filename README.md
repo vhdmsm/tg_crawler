@@ -1,7 +1,8 @@
 # **Telegram Crawler** 
 
 
-A Python package that communicates with the [Telegram messenger CLI](https://github.com/vysheng/tg), to send and receive messages and more. *Since January 2014*
+Using this crawler, you can crawl telegram channels, groups or your private chats. Chats will be saved in SQLiteDB and text file with newline delimiter.
+You can query with different parameters like channel names, group names, telegram usernames, telegram unique ids and etc.
 
 Works with Python 3.3+.
 
