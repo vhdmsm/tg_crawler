@@ -1,8 +1,8 @@
 # **Telegram Crawler** 
 
 
-Using this crawler, you can crawl telegram channels, groups or your private chats. Chats will be saved in SQLite database and text file with.
-You can query with different parameters like channel names, group names, telegram usernames, telegram unique ids and etc.
+Using this crawler, you can crawl telegram channels, groups or your private chats. Chats will be saved in SQLite database and text file.
+You can query in database with different parameters like channel names, group names, telegram usernames, telegram unique ids and etc.
 
 Works with Python 3.3+.
 
