@@ -18,7 +18,7 @@ sudo apt-get install sqlite3
 
 ## **Usage** ##
 
-For running this cute crawler, first you need to compile [my forked version of tgCLI](https://github.com/vhdmsm/tg) with the following command:
+For running this cute crawler, first you need to compile [my forked version of tg CLI](https://github.com/vhdmsm/tg). I fixed some of tg issues that causes tg to crash. After compiling tg with `make` command, run it using the following command:
 ```
 ./bin/telegram-cli -k server_pub -p 4458 --json
 ```
