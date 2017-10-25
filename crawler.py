@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+
 import sqlite3, time
 from datetime import datetime
 from channel_finder import *
 from pytg import *
+
+__author__ = 'Vahid Masoumi'
 
 
 def create_db(conn, c):
@@ -19,7 +22,6 @@ def create_db(conn, c):
     c.execute('''CREATE TABLE if not exists SupergroupMessages
              (supergroup_name blob, members_num blob, admins_count blob, supergroup_id blob, sender_firstname blob, sender_lastname blob, sender_username text, sender_id text, reply_id text, message_type text, message blob, sender_type text, date_of_message text, fwd_from_full_name text, fwd_from_peer_type text, fwd_from_username text, fwd_from_peer_id text, service text, user_action text, useraction_firstname blob, useraction_lastname blob, useraction_username text, useraction_id text,
              PRIMARY KEY (supergroup_id, message, date_of_message))''')
-
     conn.commit()
 
 
@@ -51,7 +53,6 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
             channels_number += 1
             print("time: %s #channel: %d, channel_id: %s\n" % (time.ctime(), channels_number, channel.id if not is_manual else channel))
             messages = sender.history(channel.id if not is_manual else channel, 400)
-
             print("length of channel messages: %d" % len(messages))
 
             dumping_time = datetime.now() - dumping_time
@@ -81,12 +82,10 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
 def process_channels(conn, c, sender):
     dumping_time = datetime.now()
     print("Channel Dumper is running at %s\n" % time.ctime())
-
     channels_number, new_channel_messages_number, new_group_messages_number = 0, 0, 0
     print("getting channel list from tg...")
     # channel_list = sender.channel_list(100)
     manual_channel_list = get_channel_list()
-
     channel_list, channels_number, new_channel_messages_number, dumping_time = get_channel_data(conn,c, sender, manual_channel_list, channels_number, new_channel_messages_number, dumping_time, True)
 
     dumping_time = datetime.now() - dumping_time
@@ -161,7 +160,7 @@ def process_channel(conn, c, sender, channel, channels_number):
                     if insert_to_channel_table(msg, ch_info, conn, c, sender=sender):
                         new_msg_count += 1
                 elif msg.get('from', '').get('peer_type', '') == "user":  # it's supergroup
-                    print("*******+++++++++++++++++++++!!!!!!!!! SUPERGROUP !!!!!!!!!!!!!!!**************************+++++++++++")
+                    print("******* SUPERGROUP *******")
                     print("time: %s #supergroup: %d, supergroup_id: %s\n" % (time.ctime(), channels_number, channel.id))
                     if insert_to_supergroup_table(msg, ch_info, conn, c, sender):
                         new_msg_count += 1
@@ -180,7 +179,6 @@ def insert_to_channel_table(msg, ch_info, conn, c, sender):
             'media', '').get('caption', '').replace("\n", " ").replace("'", "")
 
     original_message_or_caption = msg.get('text', '').replace("'", "") if msg.get('text', '') else (msg.get('media', '').get('caption', '').replace("\n", " ").replace("'", "") if msg.get('media', '') else '')
-
     find_channel_and_join(original_message_or_caption, sender)
 
     if msg.get('fwd_from', ''):
@@ -203,7 +201,6 @@ def insert_to_channel_table(msg, ch_info, conn, c, sender):
         conn.commit()
     except Exception as err:
         new_one = False
-
     return new_one
 
 
@@ -216,7 +213,6 @@ def insert_to_supergroup_table(msg, ch_info, conn, c, sender):
         (msg.get('media', '').get('caption', '').replace("\n", " ").replace("'", "") if msg.get('media', '') else '')
 
     original_message_or_caption = msg.get('text', '').replace("'", "") if msg.get('text', '') else (msg.get('media', '').get('caption', '').replace("\n", " ").replace("'", "") if msg.get('media', '') else '')
-
     # find_groups_and_join(original_message_or_caption, sender)
 
     action_user = {}
@@ -256,7 +252,6 @@ def insert_to_supergroup_table(msg, ch_info, conn, c, sender):
             action_user.get('username', ''),
             action_user.get('id', '')
         )
-
     try:
         c.execute("INSERT INTO SupergroupMessages VALUES (" + insert_cmd + ")")
         write_in_file("SupergroupMessages", "%s\n" % insert_cmd)
@@ -279,7 +274,6 @@ def insert_to_group_table(msg, conn, c, sender):
         (msg.get('media', '').get('caption', '').replace("\n", " ").replace("'", "") if msg.get('media', '') else '')
 
     original_message_or_caption = msg.get('text', '').replace("'", "") if msg.get('text', '') else (msg.get('media', '').get('caption', '').replace("\n", " ").replace("'", "") if msg.get('media', '') else '')
-
     # find_groups_and_join(original_message_or_caption, sender)
 
     action_user = {}
@@ -321,8 +315,6 @@ def insert_to_group_table(msg, conn, c, sender):
             action_user.get('username', ''),
             action_user.get('id', '')
         )
-
-
     try:
         c.execute("INSERT INTO GroupMessages VALUES (" + insert_cmd + ")")
         write_in_file("GroupMessages", "%s\n" % insert_cmd)
@@ -330,7 +322,6 @@ def insert_to_group_table(msg, conn, c, sender):
         conn.commit()
     except Exception as err:
         new_one = False
-
     return new_one
 
 
