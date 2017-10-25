@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import sqlite3, csv, codecs, time
-from datetime import timedelta, datetime
+import sqlite3, time
+from datetime import datetime
 from channel_finder import *
-from pytg.sender import Sender
+from pytg import *
 
 
 def create_db(conn, c):
-    # sender_firstname and other sender info are for supergroups that is treated like channels
     c.execute('''CREATE TABLE if not exists ChannelMessages
                (channel_name blob, participants_count blob, admins_count blob, message blob, date_of_message text,
                 message_type text, sender_type text,
@@ -25,13 +24,13 @@ def create_db(conn, c):
 
 
 def write_in_file(file_name, row=None):
-    print("+++++++++ called write in file\n")
+    print("++++++ write in file\n")
     output = codecs.open('%s.txt' % file_name, 'a', 'utf-8')
     output.write(row)
 
 
 def check_in_file(file_name, row=None):
-    print("Called check in file")
+    print("++++++ check in file\n")
     output = codecs.open('%s.txt' % file_name, 'r', 'utf-8')
     if row in output.read():
         return True
@@ -53,17 +52,14 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
             print("time: %s #channel: %d, channel_id: %s\n" % (time.ctime(), channels_number, channel.id if not is_manual else channel))
             messages = sender.history(channel.id if not is_manual else channel, 400)
 
-            print("Length of channel messages: %d" % len(messages))
+            print("length of channel messages: %d" % len(messages))
 
-            progress_percent = (channels_number / len(channel_list)) * 100
             dumping_time = datetime.now() - dumping_time
-            #print("%s%% of Channels Has Been Completed Since %s Before." % (progress_percent, dumping_time))
 
             msg_count = 0
             for msg in messages:
                 if msg.get('event', '') == 'message':
-                    if msg.get('from', '').get('peer_type', '') == "channel":  # it's channel, TODO make it better!
-                        # print("Message Type: Channel\n")
+                    if msg.get('from', '').get('peer_type', '') == "channel":  # it's channel
                         if msg_count == 99:
                             print(msg)
                         if insert_to_channel_table(msg, ch_info, conn, c, sender=sender):
@@ -72,15 +68,12 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
                         # print("Message Type: Group\n")
                         pass
                     else:
-                        print("Not a channel or group\n")
+                        print("Not a channel nor group\n")
                         print(msg)
 
                 msg_count += 1
-                #print("Message %d Of %d in channel %s" % (msg_count, len(messages), channels_number))
-
         except Exception as err:  # from pytg.exceptions import NoResponse
             print("in channel %s error has been occurred!" % (channel.id if not is_manual else channel))
-
 
     return channel_list, channels_number, new_channel_messages_number, dumping_time
 
@@ -92,11 +85,8 @@ def process_channels(conn, c, sender):
     channels_number, new_channel_messages_number, new_group_messages_number = 0, 0, 0
     print("getting channel list from tg...")
     # channel_list = sender.channel_list(100)
-    # print("getting manual channel list...")
     manual_channel_list = get_channel_list()
-    # print(channel_list)
 
-    # channel_list, channels_number, new_channel_messages_number, dumping_time = get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_messages_number, dumping_time, False)
     channel_list, channels_number, new_channel_messages_number, dumping_time = get_channel_data(conn,c, sender, manual_channel_list, channels_number, new_channel_messages_number, dumping_time, True)
 
     dumping_time = datetime.now() - dumping_time
@@ -111,9 +101,7 @@ def process_channels(conn, c, sender):
 def processor(conn, c, sender):
     dumping_time = datetime.now()
     print("Telegram Dumper is running at %s\n" % time.ctime())
-
     process_channels(conn, c, sender)
-
     channels_number, groups_number, new_channel_messages_number, new_group_messages_number = 0, 0, 0, 0
     dialog_list = sender.dialog_list(1000)
 
@@ -127,7 +115,6 @@ def processor(conn, c, sender):
         else:
             print("it's not group nor channel")
             continue
-
 
     dumping_time = datetime.now() - dumping_time
     print("\n++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -145,7 +132,6 @@ def process_group(conn, c, sender, group, groups_number):
     try:
         print("time: %s #group: %d, group_id: %s\n" % (time.ctime(), groups_number, group.id))
         messages = sender.history(group.id, 5000)
-
         print("Length of group messages: %d" % len(messages))
         for msg in messages:
             if msg.get('event', '') == 'message' or msg.get('event', '') == 'service':
@@ -156,11 +142,9 @@ def process_group(conn, c, sender, group, groups_number):
                 print(msg)
 
     except Exception as err:  # from pytg.exceptions import NoResponse
-        print("in group %s error has been occurred!" % group.id)
-        print(err)
+        print("in group %s error has been occurred!: %s" % (group.id, err))
         import traceback
         print(traceback.format_exc())
-
     return new_msg_count
 
 
@@ -183,18 +167,14 @@ def process_channel(conn, c, sender, channel, channels_number):
                         new_msg_count += 1
 
     except Exception as err:  # from pytg.exceptions import NoResponse
-        print("in channel %s error has been occurred!" % channel.id)
-        print(err)
+        print("in channel %s error has been occurred!: %s" % (channel.id, err))
         import traceback
         print(traceback.format_exc())
-
     return new_msg_count
 
 
 def insert_to_channel_table(msg, ch_info, conn, c, sender):
     new_one = True
-    # print(">>> Called insert to channel table")
-
     message_or_caption = msg.get('text', '').replace("\n", " ").replace("'", "") if msg.get('text', '').replace("\n",
                                                                                                                 " ") else msg.get(
             'media', '').get('caption', '').replace("\n", " ").replace("'", "")
@@ -204,7 +184,6 @@ def insert_to_channel_table(msg, ch_info, conn, c, sender):
     find_channel_and_join(original_message_or_caption, sender)
 
     if msg.get('fwd_from', ''):
-        # print("Message type: forwarded message ")
         insert_cmd = "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s', '%s', '%s', '%s', '%s'" % (
             msg.to.get('title', ''), ch_info.participants_count, ch_info.admins_count, message_or_caption, msg.date,
             'Text' if msg.get('text', '').replace("\n", " ") else 'Media', msg.get('from', '').get('first_name'),
@@ -217,18 +196,13 @@ def insert_to_channel_table(msg, ch_info, conn, c, sender):
             'Text' if msg.get('text', '').replace("\n", " ") else 'Media', msg.get('from', '').get('first_name'),
             msg.get('from', '').get('last_name'), msg.get('from', '').peer_type,
             '', '', '', '', ch_info.id)
-    # print(insert_cmd)
-
     try:
         c.execute("INSERT INTO ChannelMessages VALUES (%s)" % insert_cmd)
-        # if check_in_file("ChannelMessages", "%s\n" % insert_cmd): TODO check existence in file
         write_in_file("ChannelMessages", "%s\n" % insert_cmd)
-        # print(msg)
         print("++++++ Inserted to channel table\n")
         conn.commit()
     except Exception as err:
         new_one = False
-        # print("Exception in db assertion: %s" % err)
 
     return new_one
 
@@ -282,7 +256,6 @@ def insert_to_supergroup_table(msg, ch_info, conn, c, sender):
             action_user.get('username', ''),
             action_user.get('id', '')
         )
-    # print(insert_cmd)
 
     try:
         c.execute("INSERT INTO SupergroupMessages VALUES (" + insert_cmd + ")")
@@ -291,11 +264,9 @@ def insert_to_supergroup_table(msg, ch_info, conn, c, sender):
         conn.commit()
     except Exception as err:
         new_one = False
-        print("in supergroup %s error has been occurred!" % ch_info.id)
-        print(err)
+        print("in supergroup %s error has been occurred!: %s" % (ch_info.id, err))
         import traceback
         print(traceback.format_exc())
-
     return new_one
 
 
@@ -333,9 +304,7 @@ def insert_to_group_table(msg, conn, c, sender):
             action_user.get('username', ''),
             action_user.get('id', '')
         )
-        # print("cmd avvali\n")
     else:
-        # print("fwd from nadare\n")
         insert_cmd = "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'" % (
             msg.get('to', '').get('title', ''), msg.get('to', '').get('id', ''), msg.get('from', '').get('first_name', ''),
             msg.get('from', '').get('last_name', ''),
@@ -352,8 +321,7 @@ def insert_to_group_table(msg, conn, c, sender):
             action_user.get('username', ''),
             action_user.get('id', '')
         )
-        # print("cmd dovvomi\n")
-    # print(insert_cmd)
+
 
     try:
         c.execute("INSERT INTO GroupMessages VALUES (" + insert_cmd + ")")
@@ -366,21 +334,16 @@ def insert_to_group_table(msg, conn, c, sender):
     return new_one
 
 
-def main():
-    print("Started running main...")
+if __name__ == '__main__':
+    print("Running crawler...")
     conn = sqlite3.connect('messages.db')
     c = conn.cursor()
     create_db(conn, c)
-
-    from pytg import Telegram
     tg = Telegram(
-            telegram="/Users/vahid/PycharmProjects/tchannels-gif/tg/bin/telegram-cli",
-            pubkey_file="/Users/vahid/PycharmProjects/tchannels-gif/tg/server.pub")
+            telegram="/path/to/tg/bin/telegram-cli", # for example: "/Users/vahid/PycharmProjects/tchannels-gif/tg/bin/telegram-cli"
+            pubkey_file="/path/to/tg/tg-server.pub") # for example: "/Users/vahid/PycharmProjects/tchannels-gif/tg/server.pub"
     receiver = tg.receiver
     sender = tg.sender
     # sender = Sender("127.0.0.1", 4458)
     sender.default_answer_timeout = 50
     processor(conn, c, sender)
-
-
-main()
