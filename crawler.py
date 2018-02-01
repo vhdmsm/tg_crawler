@@ -40,7 +40,7 @@ def check_in_file(file_name, row=None):
 
 
 def get_channel_list():
-    file_name = "new_channel_list"
+    file_name = "channels_list"
     output = codecs.open('%s.txt' % file_name, 'r', 'utf-8')
     return [line.replace("\n", "") for line in output.readlines()]
 
