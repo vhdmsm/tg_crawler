@@ -68,8 +68,10 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
                     elif msg.get('from', '').get('peer_type', '') == "chat":  # it's group
                         # print("Message Type: Group\n")
                         pass
+                    elif msg.get('from', '').get('peer_type', '') == "user":  # it's group
+                        pass
                     else:
-                        print("Not a channel nor group\n")
+                        print("Not a channel, group or user message\n")
                         print(msg)
 
                 msg_count += 1
