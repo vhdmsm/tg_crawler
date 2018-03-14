@@ -69,6 +69,7 @@ def get_channel_data(conn,c, sender, channel_list, channels_number, new_channel_
                         # print("Message Type: Group\n")
                         pass
                     elif msg.get('from', '').get('peer_type', '') == "user":  # it's private message
+                        handle_private_messages(msg, ch_info, conn, c, sender=sender)
                         print("Private message: %s" % msg)
                     else:
                         print("Not a channel, group or user message\n")
@@ -172,6 +173,10 @@ def process_channel(conn, c, sender, channel, channels_number):
         import traceback
         print(traceback.format_exc())
     return new_msg_count
+
+
+def handle_private_messages(msg, ch_info, conn, c, sender):
+    pass
 
 
 def insert_to_channel_table(msg, ch_info, conn, c, sender):
